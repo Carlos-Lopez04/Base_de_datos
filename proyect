@@ -1,0 +1,430 @@
+#bd 
+
+CREATE DATABASE IF NOT EXISTS pizza_ninja;
+USE pizza_ninja;
+
+-- TABLAS
+
+-- 1. Customers
+CREATE TABLE Customers (
+    CustomerID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Phone VARCHAR(20),
+    Address VARCHAR(255)
+);
+
+-- 2. Employees
+CREATE TABLE Employees (
+    EmployeeID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Position VARCHAR(50),
+    Phone VARCHAR(20)
+);
+
+-- 3. Pizzas
+CREATE TABLE Pizzas (
+    PizzaID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Description TEXT,
+    Price DECIMAL(6,2) NOT NULL
+);
+
+-- 4. Ingredients
+CREATE TABLE Ingredients (
+    IngredientID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL
+);
+
+-- 5. Orders
+CREATE TABLE Orders (
+    OrderID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT,
+    EmployeeID INT,
+    OrderDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    TotalAmount DECIMAL(8,2),
+    DeliveryAddress VARCHAR(255),
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
+    FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID)
+);
+
+-- 6. Order_Details
+CREATE TABLE Order_Details (
+    OrderDetailID INT AUTO_INCREMENT PRIMARY KEY,
+    OrderID INT,
+    PizzaID INT,
+    Quantity INT DEFAULT 1,
+    Price DECIMAL(6,2),
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    FOREIGN KEY (PizzaID) REFERENCES Pizzas(PizzaID)
+);
+
+-- 7. Pizza_Ingredients
+CREATE TABLE Pizza_Ingredients (
+    PizzaID INT,
+    IngredientID INT,
+    PRIMARY KEY (PizzaID, IngredientID),
+    FOREIGN KEY (PizzaID) REFERENCES Pizzas(PizzaID),
+    FOREIGN KEY (IngredientID) REFERENCES Ingredients(IngredientID)
+);
+
+-- 8. Payments
+CREATE TABLE Payments (
+    PaymentID INT AUTO_INCREMENT PRIMARY KEY,
+    OrderID INT,
+    PaymentMethod VARCHAR(50),
+    Amount DECIMAL(8,2),
+    PaymentDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+
+-- 9. Delivery_Status
+CREATE TABLE Delivery_Status (
+    StatusID INT AUTO_INCREMENT PRIMARY KEY,
+    OrderID INT,
+    Status VARCHAR(50),
+    UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+
+-- 10. Promotions
+CREATE TABLE Promotions (
+    PromoID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    DiscountPercentage DECIMAL(5,2),
+    StartDate DATE,
+    EndDate DATE
+);
+
+-- Audit_Log para auditoría
+CREATE TABLE Audit_Log (
+    LogID INT AUTO_INCREMENT PRIMARY KEY,
+    TableName VARCHAR(100),
+    ActionType VARCHAR(10), -- INSERT, UPDATE, DELETE
+    Details TEXT,
+    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UserInfo VARCHAR(100)
+);
+
+-- PROCEDIMIENTOS ALMACENADOS
+
+DELIMITER $$
+
+-- CUSTOMERS
+CREATE PROCEDURE getAll_Customers()
+BEGIN
+    SELECT * FROM Customers;
+END$$
+
+CREATE PROCEDURE getById_Customers(IN p_CustomerID INT)
+BEGIN
+    SELECT * FROM Customers WHERE CustomerID = p_CustomerID;
+END$$
+
+CREATE PROCEDURE insert_Customers(IN p_Name VARCHAR(100), IN p_Phone VARCHAR(20), IN p_Address VARCHAR(255))
+BEGIN
+    INSERT INTO Customers (Name, Phone, Address) VALUES (p_Name, p_Phone, p_Address);
+END$$
+
+CREATE PROCEDURE update_Customers(IN p_CustomerID INT, IN p_Name VARCHAR(100), IN p_Phone VARCHAR(20), IN p_Address VARCHAR(255))
+BEGIN
+    UPDATE Customers SET Name = p_Name, Phone = p_Phone, Address = p_Address WHERE CustomerID = p_CustomerID;
+END$$
+
+CREATE PROCEDURE delete_Customers(IN p_CustomerID INT)
+BEGIN
+    DELETE FROM Customers WHERE CustomerID = p_CustomerID;
+END$$
+
+-- EMPLOYEES
+CREATE PROCEDURE getAll_Employees()
+BEGIN
+    SELECT * FROM Employees;
+END$$
+
+CREATE PROCEDURE getById_Employees(IN p_EmployeeID INT)
+BEGIN
+    SELECT * FROM Employees WHERE EmployeeID = p_EmployeeID;
+END$$
+
+CREATE PROCEDURE insert_Employees(IN p_Name VARCHAR(100), IN p_Position VARCHAR(50), IN p_Phone VARCHAR(20))
+BEGIN
+    INSERT INTO Employees (Name, Position, Phone) VALUES (p_Name, p_Position, p_Phone);
+END$$
+
+CREATE PROCEDURE update_Employees(IN p_EmployeeID INT, IN p_Name VARCHAR(100), IN p_Position VARCHAR(50), IN p_Phone VARCHAR(20))
+BEGIN
+    UPDATE Employees SET Name = p_Name, Position = p_Position, Phone = p_Phone WHERE EmployeeID = p_EmployeeID;
+END$$
+
+CREATE PROCEDURE delete_Employees(IN p_EmployeeID INT)
+BEGIN
+    DELETE FROM Employees WHERE EmployeeID = p_EmployeeID;
+END$$
+
+-- PIZZAS
+CREATE PROCEDURE getAll_Pizzas()
+BEGIN
+    SELECT * FROM Pizzas;
+END$$
+
+CREATE PROCEDURE getById_Pizzas(IN p_PizzaID INT)
+BEGIN
+    SELECT * FROM Pizzas WHERE PizzaID = p_PizzaID;
+END$$
+
+CREATE PROCEDURE insert_Pizzas(IN p_Name VARCHAR(100), IN p_Description TEXT, IN p_Price DECIMAL(6,2))
+BEGIN
+    INSERT INTO Pizzas (Name, Description, Price) VALUES (p_Name, p_Description, p_Price);
+END$$
+
+CREATE PROCEDURE update_Pizzas(IN p_PizzaID INT, IN p_Name VARCHAR(100), IN p_Description TEXT, IN p_Price DECIMAL(6,2))
+BEGIN
+    UPDATE Pizzas SET Name = p_Name, Description = p_Description, Price = p_Price WHERE PizzaID = p_PizzaID;
+END$$
+
+CREATE PROCEDURE delete_Pizzas(IN p_PizzaID INT)
+BEGIN
+    DELETE FROM Pizzas WHERE PizzaID = p_PizzaID;
+END$$
+
+-- INGREDIENTS
+CREATE PROCEDURE getAll_Ingredients()
+BEGIN
+    SELECT * FROM Ingredients;
+END$$
+
+CREATE PROCEDURE getById_Ingredients(IN p_IngredientID INT)
+BEGIN
+    SELECT * FROM Ingredients WHERE IngredientID = p_IngredientID;
+END$$
+
+CREATE PROCEDURE insert_Ingredients(IN p_Name VARCHAR(100))
+BEGIN
+    INSERT INTO Ingredients (Name) VALUES (p_Name);
+END$$
+
+CREATE PROCEDURE update_Ingredients(IN p_IngredientID INT, IN p_Name VARCHAR(100))
+BEGIN
+    UPDATE Ingredients SET Name = p_Name WHERE IngredientID = p_IngredientID;
+END$$
+
+CREATE PROCEDURE delete_Ingredients(IN p_IngredientID INT)
+BEGIN
+    DELETE FROM Ingredients WHERE IngredientID = p_IngredientID;
+END$$
+
+-- ORDERS
+CREATE PROCEDURE getAll_Orders()
+BEGIN
+    SELECT * FROM Orders;
+END$$
+
+CREATE PROCEDURE getById_Orders(IN p_OrderID INT)
+BEGIN
+    SELECT * FROM Orders WHERE OrderID = p_OrderID;
+END$$
+
+CREATE PROCEDURE insert_Orders(IN p_CustomerID INT, IN p_EmployeeID INT, IN p_TotalAmount DECIMAL(8,2), IN p_DeliveryAddress VARCHAR(255))
+BEGIN
+    INSERT INTO Orders (CustomerID, EmployeeID, TotalAmount, DeliveryAddress) VALUES (p_CustomerID, p_EmployeeID, p_TotalAmount, p_DeliveryAddress);
+END$$
+
+CREATE PROCEDURE update_Orders(IN p_OrderID INT, IN p_CustomerID INT, IN p_EmployeeID INT, IN p_TotalAmount DECIMAL(8,2), IN p_DeliveryAddress VARCHAR(255))
+BEGIN
+    UPDATE Orders SET CustomerID = p_CustomerID, EmployeeID = p_EmployeeID, TotalAmount = p_TotalAmount, DeliveryAddress = p_DeliveryAddress WHERE OrderID = p_OrderID;
+END$$
+
+CREATE PROCEDURE delete_Orders(IN p_OrderID INT)
+BEGIN
+    DELETE FROM Orders WHERE OrderID = p_OrderID;
+END$$
+
+-- ORDER_DETAILS
+CREATE PROCEDURE getAll_Order_Details()
+BEGIN
+    SELECT * FROM Order_Details;
+END$$
+
+CREATE PROCEDURE getById_Order_Details(IN p_OrderDetailID INT)
+BEGIN
+    SELECT * FROM Order_Details WHERE OrderDetailID = p_OrderDetailID;
+END$$
+
+CREATE PROCEDURE insert_Order_Details(IN p_OrderID INT, IN p_PizzaID INT, IN p_Quantity INT, IN p_Price DECIMAL(6,2))
+BEGIN
+    INSERT INTO Order_Details (OrderID, PizzaID, Quantity, Price) VALUES (p_OrderID, p_PizzaID, p_Quantity, p_Price);
+END$$
+
+CREATE PROCEDURE update_Order_Details(IN p_OrderDetailID INT, IN p_OrderID INT, IN p_PizzaID INT, IN p_Quantity INT, IN p_Price DECIMAL(6,2))
+BEGIN
+    UPDATE Order_Details SET OrderID = p_OrderID, PizzaID = p_PizzaID, Quantity = p_Quantity, Price = p_Price WHERE OrderDetailID = p_OrderDetailID;
+END$$
+
+CREATE PROCEDURE delete_Order_Details(IN p_OrderDetailID INT)
+BEGIN
+    DELETE FROM Order_Details WHERE OrderDetailID = p_OrderDetailID;
+END$$
+
+-- PIZZA_INGREDIENTS
+CREATE PROCEDURE getAll_Pizza_Ingredients()
+BEGIN
+    SELECT * FROM Pizza_Ingredients;
+END$$
+
+-- PIZZA_INGREDIENTS
+CREATE PROCEDURE getById_Pizza_Ingredients(IN p_PizzaID INT, IN p_IngredientID INT)
+BEGIN
+    SELECT * FROM Pizza_Ingredients WHERE PizzaID = p_PizzaID AND IngredientID = p_IngredientID;
+END$$
+
+CREATE PROCEDURE insert_Pizza_Ingredients(IN p_PizzaID INT, IN p_IngredientID INT)
+BEGIN
+    INSERT INTO Pizza_Ingredients (PizzaID, IngredientID) VALUES (p_PizzaID, p_IngredientID);
+END$$
+
+CREATE PROCEDURE update_Pizza_Ingredients(IN p_PizzaID INT, IN p_IngredientID INT, IN p_NewIngredientID INT)
+BEGIN
+    UPDATE Pizza_Ingredients 
+    SET IngredientID = p_NewIngredientID 
+    WHERE PizzaID = p_PizzaID AND IngredientID = p_IngredientID;
+END$$
+
+CREATE PROCEDURE delete_Pizza_Ingredients(IN p_PizzaID INT, IN p_IngredientID INT)
+BEGIN
+    DELETE FROM Pizza_Ingredients WHERE PizzaID = p_PizzaID AND IngredientID = p_IngredientID;
+END$$
+
+-- PAYMENTS
+CREATE PROCEDURE getAll_Payments()
+BEGIN
+    SELECT * FROM Payments;
+END$$
+
+CREATE PROCEDURE getById_Payments(IN p_PaymentID INT)
+BEGIN
+    SELECT * FROM Payments WHERE PaymentID = p_PaymentID;
+END$$
+
+CREATE PROCEDURE insert_Payments(IN p_OrderID INT, IN p_PaymentMethod VARCHAR(50), IN p_Amount DECIMAL(8,2))
+BEGIN
+    INSERT INTO Payments (OrderID, PaymentMethod, Amount) VALUES (p_OrderID, p_PaymentMethod, p_Amount);
+END$$
+
+CREATE PROCEDURE update_Payments(IN p_PaymentID INT, IN p_OrderID INT, IN p_PaymentMethod VARCHAR(50), IN p_Amount DECIMAL(8,2))
+BEGIN
+    UPDATE Payments SET OrderID = p_OrderID, PaymentMethod = p_PaymentMethod, Amount = p_Amount WHERE PaymentID = p_PaymentID;
+END$$
+
+CREATE PROCEDURE delete_Payments(IN p_PaymentID INT)
+BEGIN
+    DELETE FROM Payments WHERE PaymentID = p_PaymentID;
+END$$
+
+-- DELIVERY_STATUS
+CREATE PROCEDURE getAll_Delivery_Status()
+BEGIN
+    SELECT * FROM Delivery_Status;
+END$$
+
+CREATE PROCEDURE getById_Delivery_Status(IN p_StatusID INT)
+BEGIN
+    SELECT * FROM Delivery_Status WHERE StatusID = p_StatusID;
+END$$
+
+CREATE PROCEDURE insert_Delivery_Status(IN p_OrderID INT, IN p_Status VARCHAR(50))
+BEGIN
+    INSERT INTO Delivery_Status (OrderID, Status) VALUES (p_OrderID, p_Status);
+END$$
+
+CREATE PROCEDURE update_Delivery_Status(IN p_StatusID INT, IN p_OrderID INT, IN p_Status VARCHAR(50))
+BEGIN
+    UPDATE Delivery_Status SET OrderID = p_OrderID, Status = p_Status WHERE StatusID = p_StatusID;
+END$$
+
+CREATE PROCEDURE delete_Delivery_Status(IN p_StatusID INT)
+BEGIN
+    DELETE FROM Delivery_Status WHERE StatusID = p_StatusID;
+END$$
+
+-- PROMOTIONS
+CREATE PROCEDURE getAll_Promotions()
+BEGIN
+    SELECT * FROM Promotions;
+END$$
+
+CREATE PROCEDURE getById_Promotions(IN p_PromoID INT)
+BEGIN
+    SELECT * FROM Promotions WHERE PromoID = p_PromoID;
+END$$
+
+CREATE PROCEDURE insert_Promotions(IN p_Name VARCHAR(100), IN p_DiscountPercentage DECIMAL(5,2), IN p_StartDate DATE, IN p_EndDate DATE)
+BEGIN
+    INSERT INTO Promotions (Name, DiscountPercentage, StartDate, EndDate) VALUES (p_Name, p_DiscountPercentage, p_StartDate, p_EndDate);
+END$$
+
+CREATE PROCEDURE update_Promotions(IN p_PromoID INT, IN p_Name VARCHAR(100), IN p_DiscountPercentage DECIMAL(5,2), IN p_StartDate DATE, IN p_EndDate DATE)
+BEGIN
+    UPDATE Promotions SET Name = p_Name, DiscountPercentage = p_DiscountPercentage, StartDate = p_StartDate, EndDate = p_EndDate WHERE PromoID = p_PromoID;
+END$$
+
+CREATE PROCEDURE delete_Promotions(IN p_PromoID INT)
+BEGIN
+    DELETE FROM Promotions WHERE PromoID = p_PromoID;
+END$$
+
+DELIMITER ;
+
+-- TRIGGERS DE AUDITORÍA
+
+DELIMITER $$
+
+-- Clientes
+CREATE TRIGGER trg_after_insert_Customers
+AFTER INSERT ON Customers
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Log(TableName, ActionType, Details, UserInfo)
+    VALUES('Customers', 'INSERT', CONCAT('ID:', NEW.CustomerID, ', Name:', NEW.Name, ', Phone:', NEW.Phone, ', Address:', NEW.Address), USER());
+END$$
+
+CREATE TRIGGER trg_after_update_Customers
+AFTER UPDATE ON Customers
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Log(TableName, ActionType, Details, UserInfo)
+    VALUES('Customers', 'UPDATE', CONCAT('ID:', NEW.CustomerID, ', Name:', NEW.Name, ', Phone:', NEW.Phone, ', Address:', NEW.Address), USER());
+END$$
+
+CREATE TRIGGER trg_after_delete_Customers
+AFTER DELETE ON Customers
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Log(TableName, ActionType, Details, UserInfo)
+    VALUES('Customers', 'DELETE', CONCAT('ID:', OLD.CustomerID, ', Name:', OLD.Name, ', Phone:', OLD.Phone, ', Address:', OLD.Address), USER());
+END$$
+
+CREATE TRIGGER trg_after_insert_Employees
+AFTER INSERT ON Employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Log(TableName, ActionType, Details, UserInfo)
+    VALUES('Employees', 'INSERT', CONCAT('ID:', NEW.EmployeeID, ', Name:', NEW.Name, ', Position:', NEW.Position, ', Phone:', NEW.Phone), USER());
+END$$
+
+CREATE TRIGGER trg_after_update_Employees
+AFTER UPDATE ON Employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Log(TableName, ActionType, Details, UserInfo)
+    VALUES('Employees', 'UPDATE', CONCAT('ID:', NEW.EmployeeID, ', Name:', NEW.Name, ', Position:', NEW.Position, ', Phone:', NEW.Phone), USER());
+END$$
+
+CREATE TRIGGER trg_after_delete_Employees
+AFTER DELETE ON Employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Log(TableName, ActionType, Details, UserInfo)
+    VALUES('Employees', 'DELETE', CONCAT('ID:', OLD.EmployeeID, ', Name:', OLD.Name, ', Position:', OLD.Position, ', Phone:', OLD.Phone), USER());
+END$$
+
+DELIMITER ;
