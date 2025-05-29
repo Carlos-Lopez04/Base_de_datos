@@ -1,5 +1,3 @@
-#base de datos pizzaninja
-
 CREATE DATABASE pizza_ninja;
 USE pizza_ninja;
 
@@ -919,4 +917,89 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- vistas
+# informacion de los empleados
+CREATE VIEW vw_Employees AS
+SELECT EmployeeID, Name, Position, Phone
+FROM Employees;
+
+select * from vw_Employees;
+
+# pedidos con detalle del cliente
+CREATE VIEW vw_OrdersWithCustomer AS
+SELECT 
+    o.OrderID,
+    o.OrderDate,
+    o.TotalAmount,
+    o.DeliveryAddress,
+    c.CustomerID,
+    c.Name AS CustomerName,
+    c.Phone AS CustomerPhone,
+    c.Address AS CustomerAddress
+FROM Orders o
+LEFT JOIN Customers c ON o.CustomerID = c.CustomerID;
+
+select * from vw_OrdersWithCustomer;
+
+# informacion de pedido completo
+CREATE VIEW vw_OrderDetailsComplete AS
+SELECT 
+    o.OrderID,
+    o.OrderDate,
+    o.TotalAmount,
+    c.Name AS CustomerName,
+    e.Name AS EmployeeName,
+    od.OrderDetailID,
+    p.PizzaID,
+    p.Name AS PizzaName,
+    od.Quantity,
+    od.Price AS UnitPrice,
+    (od.Quantity * od.Price) AS LineTotal
+FROM Orders o
+LEFT JOIN Customers c ON o.CustomerID = c.CustomerID
+LEFT JOIN Employees e ON o.EmployeeID = e.EmployeeID
+INNER JOIN Order_Details od ON o.OrderID = od.OrderID
+INNER JOIN Pizzas p ON od.PizzaID = p.PizzaID;
+
+select * from vw_OrderDetailsComplete;
+
+# ventas diarias
+CREATE VIEW vw_DailySales AS
+SELECT 
+    DATE(OrderDate) AS SaleDate,
+    SUM(TotalAmount) AS TotalSales,
+    COUNT(OrderID) AS NumberOfOrders
+FROM Orders
+GROUP BY DATE(OrderDate);
+
+select * from vw_DailySales;
+
+#pizzas mas vendidas
+CREATE VIEW vw_MostSoldPizzas AS
+SELECT 
+    p.PizzaID,
+    p.Name AS PizzaName,
+    SUM(od.Quantity) AS TotalQuantitySold,
+    SUM(od.Quantity * od.Price) AS TotalSalesAmount
+FROM Order_Details od
+INNER JOIN Pizzas p ON od.PizzaID = p.PizzaID
+GROUP BY p.PizzaID, p.Name
+ORDER BY TotalQuantitySold DESC;
+
+select * from vw_MostSoldPizzas;
+
+# ventas por empleado
+CREATE VIEW vw_SalesByEmployee AS
+SELECT 
+    e.EmployeeID,
+    e.Name AS EmployeeName,
+    COUNT(o.OrderID) AS NumberOfOrders,
+    SUM(o.TotalAmount) AS TotalSales
+FROM Employees e
+LEFT JOIN Orders o ON e.EmployeeID = o.EmployeeID
+GROUP BY e.EmployeeID, e.Name
+ORDER BY TotalSales DESC;
+
+select * from vw_SalesByEmployee
 
