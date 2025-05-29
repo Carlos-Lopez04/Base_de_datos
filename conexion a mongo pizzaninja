@@ -3,7 +3,6 @@ from pymongo import MongoClient
 from decimal import Decimal
 from datetime import date, datetime
 
-# Conexión MySQL
 mysql_conn = pymysql.connect(
     host='localhost',
     user='root',
@@ -13,18 +12,17 @@ mysql_conn = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 
-# Conexión MongoDB
 mongo_client = MongoClient('mongodb://localhost:27017/')
 mongo_db = mongo_client['pizza_ninja']
 
-# Tablas a migrar
+# a migrar
 tables = [
     'Customers', 'Employees', 'Pizzas', 'Ingredients', 'Orders',
     'Order_Details', 'Pizza_Ingredients', 'Payments',
     'Delivery_Status', 'Promotions', 'Audit_Log'
 ]
 
-# Convertir datos para MongoDB
+# datos
 def clean_document(doc):
     for key, value in doc.items():
         if isinstance(value, Decimal):
@@ -33,7 +31,6 @@ def clean_document(doc):
             doc[key] = datetime.combine(value, datetime.min.time())
     return doc
 
-# Proceso de migración
 try:
     with mysql_conn.cursor() as cursor:
         for table in tables:
