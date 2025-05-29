@@ -1,36 +1,51 @@
-from pymysql.cursors import DictCursor
+import pymysql
+from pymongo import MongoClient
+from decimal import Decimal
+from datetime import date, datetime
 
+# Conexión MySQL
 mysql_conn = pymysql.connect(
     host='localhost',
     user='root',
     password='12345678',
     database='pizza_ninja',
     port=3306,
-    cursorclass=DictCursor
+    cursorclass=pymysql.cursors.DictCursor
 )
 
+# Conexión MongoDB
 mongo_client = MongoClient('mongodb://localhost:27017/')
 mongo_db = mongo_client['pizza_ninja']
 
+# Tablas a migrar
 tables = [
     'Customers', 'Employees', 'Pizzas', 'Ingredients', 'Orders',
     'Order_Details', 'Pizza_Ingredients', 'Payments',
-    'Delivery_Status', 'Promotions'
+    'Delivery_Status', 'Promotions', 'Audit_Log'
 ]
 
+# Convertir datos para MongoDB
+def clean_document(doc):
+    for key, value in doc.items():
+        if isinstance(value, Decimal):
+            doc[key] = float(value)
+        elif isinstance(value, date) and not isinstance(value, datetime):
+            doc[key] = datetime.combine(value, datetime.min.time())
+    return doc
+
+# Proceso de migración
 try:
     with mysql_conn.cursor() as cursor:
         for table in tables:
             print(f'Migrando tabla: {table}...')
-
             cursor.execute(f"SELECT * FROM {table}")
             rows = cursor.fetchall()
 
             if rows:
+                cleaned_rows = [clean_document(row) for row in rows]
                 mongo_collection = mongo_db[table]
-                mongo_collection.delete_many({})  # Limpiar colección antes de insertar
-                mongo_collection.insert_many(rows)
-                print(f'Insertados {len(rows)} documentos en {table}')
+                mongo_collection.insert_many(cleaned_rows)
+                print(f'Insertados {len(cleaned_rows)} documentos en {table}')
             else:
                 print(f'Tabla {table} sin datos.')
 finally:
